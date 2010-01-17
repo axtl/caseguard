@@ -1,6 +1,6 @@
 '''Guard against case-folding collisions by blocking the 'add' operation if it would cause a collision on the local repository'''
 
-import platform, re, os
+import re
 from mercurial.i18n import _
 from mercurial import commands, extensions, cmdutil
 
