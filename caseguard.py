@@ -1,4 +1,4 @@
-'''Guard against case-folding collisions on Mac OS X, by blocking an add that would cause a collision'''
+'''Guard against case-folding collisions by blocking the 'add' operation if it would cause a collision on the local repository'''
 
 import platform, re, os
 from mercurial.i18n import _
@@ -14,9 +14,6 @@ warning = _("""
 """)
 
 def uisetup(ui):
-    if not oscheck():
-        ''' default return, this is not the extension they are looking for (non-Darwin) '''
-        return
     def reallyadd(orig, ui, repo, *pats, **opts):
         if casecollide(repo, *pats, **opts):
             ui.warn(warning)
@@ -44,8 +41,3 @@ def uisetup(ui):
                             ui.status(_('EEE> %s and %s (tracked): case-collision danger\n' % (f, ctxmanit)))
 
         return colliding
-
-''' Check to make sure that we are running on OS X'''
-def oscheck():
-    osname = platform.system()
-    return re.match('[dD]arwin', osname)
