@@ -59,13 +59,13 @@ def uisetup(ui):
             return orig(ui, repo, *pats, **opts)
 
     entry = extensions.wrapcommand(commands.table, 'add', reallyadd)
-    entry[1].append(('', 'override', False, _('add files regardless of \
-        possible case-collision problems')))
-    entry[1].append(('', 'silent', False, _('do not output a list of \
-        case-colliding files')))
+    entry[1].append(('o', 'override', False, _('add files regardless of \
+possible case-collision problems')))
+    entry[1].append(('s', 'silent', False, _('do not output a list of \
+case-colliding files')))
 
     '''Check the case of the given file against the repository. Return \
-    True on collisions and print a list of problem-files'''
+True on collisions and print a list of problem-files'''
 
     def casecollide(repo, silent, *pats, **opts):
         colliding = False
@@ -84,7 +84,7 @@ def uisetup(ui):
                             colliding = True
                             if not silent:
                                 ui.status(_('EEE> %s and %s (tracked): \
-                                 case-collision danger\n' % (f, ctxmanit)))
+case-collision danger\n' % (f, ctxmanit)))
                             else:
                                 return colliding
 
