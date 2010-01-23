@@ -3,7 +3,8 @@
 #
 # This is a small extension for Mercurial (http://www.selenic.com/mercurial)
 # that prevents the addition of files to repositories when such additions
-# will cause case-folding collisions on certain filesystems.
+# will cause case-folding collisions on certain filesystems. For more
+# information, please refer to http://mercurial.selenic.com/wiki/CaseFolding
 #
 # To enable the "caseguard" extension globally, put these lines in your
 # ~/.hgrc:
@@ -47,16 +48,16 @@ warning = _("""not adding anything: case-collision danger\n""")
 
 def uisetup(ui):
 
-    def reallyadd(orig, ui, repo, override=False, *pats, **opts):
-        override = override or ui.configbool('caseguard', 'override')
+    def reallyadd(orig, ui, repo, *pats, **opts):
+        override = opts['override'] or ui.configbool('caseguard', 'override')
         collision = casecollide(ui, repo, *pats, **opts)
         if not override and collision:
             ui.warn(warning)
         else:
             return orig(ui, repo, *pats, **opts)
 
-    entry = extensions.wrapcommand(commands.table, 'add', reallyadd)
-    entry[1].append(('o', 'override', False, _('add files regardless of \
+    wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
+    wrapadd[1].append(('o', 'override', False, _('add files regardless of \
 possible case-collision problems')))
 
     '''Check the case of the given file against the repository. Return \
