@@ -56,9 +56,21 @@ def uisetup(ui):
         else:
             return orig(ui, repo, *pats, **opts)
 
+    def reallyrm(orig, ui, repo, override=False, *pats, **opts):
+        override = override or ui.configbool('caseguard', 'override')
+        match = casematch(ui, repo, *pats, **opts)
+        if not (override or match):
+            ui.warn(warning)
+        else:
+            return orig(ui, repo, *pats, **opts)
+
     wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
     wrapadd[1].append(('o', 'override', False, _('add files regardless of \
 possible case-collision problems')))
+
+    wraprm = extensions.wrapcommand(commands.table, 'rm', reallyrm)
+    wraprm[1].append(('o', 'override', False, _('remove files regardless of \
+differences in case')))
 
     '''Check the case of the given file against the repository. Return \
 True on collisions and (optionally) print a list of problem-files.'''
@@ -82,3 +94,38 @@ True on collisions and (optionally) print a list of problem-files.'''
 %s (already in repository)\n' % (f, ctxmanit)))
 
         return colliding
+
+    '''Check if files requested for removal match in case with those on \
+disk'''
+
+    def casematch(ui, repo, *pats, **opts):
+        matching = True
+        ctx = repo.changectx('tip')
+        ctxmanits = [item[0] for item in ctx.manifest().items()]
+        pending = ' '.join(repo.status()[1])
+        m = cmdutil.match(repo, pats, opts)
+
+
+        for f in repo.walk(m):
+            exact = m.exact(f)
+            print m.files()
+            return False
+
+            if not exact:
+                print f
+            else:
+                print ('%s matches %s\n' % (f, exact))
+
+        # for f in repo.walk(m):
+        #             exact = m.exact(f)
+        #             if exact or f not in repo.dirstate:
+        #                 fpat = re.compile(f, re.IGNORECASE)
+        #                 for ctxmanit in ctxmanits:
+        #                     if fpat.match(ctxmanit):
+        #                         if not fpat.search(pending):
+        #                             matching = False
+        #                             ui.note(_('%s not the same as %s (from \
+        # repository)\n' % (f, ctxmanit)))
+        #         return matching
+
+        return False
