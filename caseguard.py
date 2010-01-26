@@ -43,12 +43,37 @@ import re
 from mercurial.i18n import _
 from mercurial import commands, extensions, cmdutil
 
-warning = _("""not adding anything: case-collision danger\n""")
+warning = _('not adding anything: case-collision danger\n')
+
+
+def casecollide(ui, repo, *pats, **opts):
+    '''check the case of the given file against the repository. Return \
+True on collisions and (optionally) print a list of problem-files.'''
+    colliding = False
+    ctx = repo.changectx('tip')
+    ctxmanits = [item[0] for item in ctx.manifest().items()]
+    pending = ' '.join(repo.status()[2])
+    m = cmdutil.match(repo, pats, opts)
+
+    for f in repo.walk(m):
+        exact = m.exact(f)
+        if exact or f not in repo.dirstate:
+            fpat = re.compile(f, re.IGNORECASE)
+            for ctxmanit in ctxmanits:
+                if fpat.match(ctxmanit):
+                    if not fpat.search(pending):
+                        colliding = True
+                        ui.note(_('%s may cause a case-collision with \
+%s (already in repository)\n' % (f, ctxmanit)))
+
+    return colliding
 
 
 def uisetup(ui):
 
     def reallyadd(orig, ui, repo, *pats, **opts):
+        '''wrap the add command so that it enforces filenames differ in \
+more than just case'''
         override = opts['override'] or ui.configbool('caseguard', 'override')
         collision = casecollide(ui, repo, *pats, **opts)
         if not override and collision:
@@ -59,26 +84,3 @@ def uisetup(ui):
     wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
     wrapadd[1].append(('o', 'override', False, _('add files regardless of \
 possible case-collision problems')))
-
-    '''Check the case of the given file against the repository. Return \
-True on collisions and (optionally) print a list of problem-files.'''
-
-    def casecollide(ui, repo, *pats, **opts):
-        colliding = False
-        ctx = repo.changectx('tip')
-        ctxmanits = [item[0] for item in ctx.manifest().items()]
-        pending = ' '.join(repo.status()[2])
-        m = cmdutil.match(repo, pats, opts)
-
-        for f in repo.walk(m):
-            exact = m.exact(f)
-            if exact or f not in repo.dirstate:
-                fpat = re.compile(f, re.IGNORECASE)
-                for ctxmanit in ctxmanits:
-                    if fpat.match(ctxmanit):
-                        if not fpat.search(pending):
-                            colliding = True
-                            ui.note(_('%s may cause a case-collision with \
-%s (already in repository)\n' % (f, ctxmanit)))
-
-        return colliding
