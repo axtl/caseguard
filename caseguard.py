@@ -70,8 +70,8 @@ True on collisions and (optionally) print a list of problem-files.'''
 
 
 def casematch(ui, repo, *pats, **opts):
-        '''check if files requested for removal match in case with those on \
-    disk'''
+    '''check if files requested for removal match in case with those on \
+disk'''
     matching = True
     ctx = repo.changectx('tip')
     ctxmanits = [item[0] for item in ctx.manifest().items()]
