@@ -43,7 +43,8 @@ import re
 from mercurial.i18n import _
 from mercurial import commands, extensions, cmdutil
 
-warning = _('not adding anything: case-collision danger\n')
+addwarning = _('not adding anything: case-collision danger\n')
+rmvwarning = _('not removing: case of specified file differs from tracked\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
@@ -75,52 +76,37 @@ disk'''
     matching = True
     ctx = repo.changectx('tip')
     ctxmanits = [item[0] for item in ctx.manifest().items()]
-    pending = ' '.join(repo.status()[1])
     m = cmdutil.match(repo, pats, opts)
+    dirfiles = ' '.join(m.files())
 
+    for ctxmanit in ctxmanits:
+        regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
+        if(regexmatch):
+            if not re.search(ctxmanit, regexmatch.group(0)):
+                matching = False
+                ui.note(_('%s not removed, file in repository (%s) has \
+different case\n' % (regexmatch.group(0), ctxmanit)))
 
-    for f in repo.walk(m):
-        exact = m.exact(f)
-        print m.files()
-        return False
-
-        if not exact:
-            print f
-        else:
-            print ('%s matches %s\n' % (f, exact))
-
-    # for f in repo.walk(m):
-    #             exact = m.exact(f)
-    #             if exact or f not in repo.dirstate:
-    #                 fpat = re.compile(f, re.IGNORECASE)
-    #                 for ctxmanit in ctxmanits:
-    #                     if fpat.match(ctxmanit):
-    #                         if not fpat.search(pending):
-    #                             matching = False
-    #                             ui.note(_('%s not the same as %s (from \
-    # repository)\n' % (f, ctxmanit)))
-    #         return matching
-
-    return False
+    return matching
 
 
 def uisetup(ui):
 
     def reallyadd(orig, ui, repo, *pats, **opts):
-        '''wrap the add command so that it enforces filenames differ in \
+        '''wrap the add command so it enforces that filenames differ in \
 more than just case'''
         override = opts['override'] or ui.configbool('caseguard', 'override')
         collision = casecollide(ui, repo, *pats, **opts)
         if not override and collision:
-            ui.warn(warning)
+            ui.warn(addwarning)
         else:
             return orig(ui, repo, *pats, **opts)
 
-    def reallyrm(orig, ui, repo, override=False, *pats, **opts):
-        override = override or ui.configbool('caseguard', 'override')
+    def reallyrm(orig, ui, repo, *pats, **opts):
+        override = opts['override'] or ui.configbool('caseguard', 'override')
         match = casematch(ui, repo, *pats, **opts)
         if not (override or match):
-            ui.warn(warning)
+            ui.warn(rmvwarning)
         else:
             return orig(ui, repo, *pats, **opts)
 
