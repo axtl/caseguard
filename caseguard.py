@@ -45,6 +45,7 @@ from mercurial import commands, extensions, cmdutil
 
 addwarning = _('not adding anything: case-collision danger\n')
 rmvwarning = _('not removing: case of specified file differs from tracked\n')
+adrwarning = _('not allowing addremove: case-collision danger\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
@@ -110,6 +111,14 @@ more than just case'''
         else:
             return orig(ui, repo, *pats, **opts)
 
+    def reallyaddremove(orig, ui, repo, *pats, **opts):
+        override = opts['override'] or ui.configbool('caseguard', 'override')
+        collision = casecollide(ui, repo, *pats, **opts)
+        if not override and collision:
+            ui.warn(adrwarning)
+        else:
+            return orig(ui, repo, *pats, **opts)
+
     wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
     wrapadd[1].append(('o', 'override', False, _('add files regardless of \
 possible case-collision problems')))
@@ -117,3 +126,8 @@ possible case-collision problems')))
     wraprm = extensions.wrapcommand(commands.table, 'rm', reallyrm)
     wraprm[1].append(('o', 'override', False, _('remove files regardless of \
 differences in case')))
+
+    wrapaddremove = extensions.wrapcommand(commands.table, 'addremove', \
+reallyaddremove)
+    wrapaddremove[1].append(('o', 'override', False, _('add/remove files \
+regardless of differences in case')))
