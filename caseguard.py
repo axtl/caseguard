@@ -36,8 +36,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-'''guard against case-folding collisions by blocking the 'add' operation if \
-it would cause a collision on the local repository'''
+'''guard against case-folding collisions'''
 
 import re
 from mercurial.i18n import _
@@ -49,8 +48,8 @@ adrwarning = _('not allowing addremove: case-collision danger\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
-    '''check the case of the given file against the repository. Return \
-True on collisions and (optionally) print a list of problem-files.'''
+    '''check the case of the given file against the repository. Return True
+    on collisions and (optionally) print a list of problem-files.'''
     colliding = False
     ctx = repo.changectx('tip')
     ctxmanits = [item[0] for item in ctx.manifest().items()]
@@ -65,15 +64,16 @@ True on collisions and (optionally) print a list of problem-files.'''
                 if fpat.match(ctxmanit):
                     if not fpat.search(pending):
                         colliding = True
-                        ui.note(_('%s may cause a case-collision with \
-%s (already in repository)\n' % (f, ctxmanit)))
+                        ui.note(_('%s may cause a case-collision with %s '
+                                     '(already in repository)\n' % (f,
+                                     ctxmanit)))
 
     return colliding
 
 
 def casematch(ui, repo, *pats, **opts):
-    '''check if files requested for removal match in case with those on \
-disk'''
+    '''check if files requested for removal match in case with those on
+    disk'''
     matching = True
     ctx = repo.changectx('tip')
     ctxmanits = [item[0] for item in ctx.manifest().items()]
@@ -85,8 +85,8 @@ disk'''
         if(regexmatch):
             if not re.search(ctxmanit, regexmatch.group(0)):
                 matching = False
-                ui.note(_('%s not removed, file in repository (%s) has \
-different case\n' % (regexmatch.group(0), ctxmanit)))
+                ui.note(_('%s not removed, file in repository (%s) has '
+                     'different case\n' % (regexmatch.group(0), ctxmanit)))
 
     return matching
 
@@ -94,8 +94,8 @@ different case\n' % (regexmatch.group(0), ctxmanit)))
 def uisetup(ui):
 
     def reallyadd(orig, ui, repo, *pats, **opts):
-        '''wrap the add command so it enforces that filenames differ in \
-more than just case'''
+        '''wrap the add command so it enforces that filenames differ in
+         more than just case'''
         override = opts['override'] or ui.configbool('caseguard', 'override')
         collision = casecollide(ui, repo, *pats, **opts)
         if not override and collision:
@@ -120,14 +120,14 @@ more than just case'''
             return orig(ui, repo, *pats, **opts)
 
     wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
-    wrapadd[1].append(('o', 'override', False, _('add files regardless of \
-possible case-collision problems')))
+    wrapadd[1].append(('o', 'override', False, _('add files regardless of '
+    'possible case-collision problems')))
 
     wraprm = extensions.wrapcommand(commands.table, 'rm', reallyrm)
-    wraprm[1].append(('o', 'override', False, _('remove files regardless of \
-differences in case')))
+    wraprm[1].append(('o', 'override', False, _('remove files regardless of '
+    'differences in case')))
 
-    wrapaddremove = extensions.wrapcommand(commands.table, 'addremove', \
-reallyaddremove)
-    wrapaddremove[1].append(('o', 'override', False, _('add/remove files \
-regardless of differences in case')))
+    wrapaddremove = extensions.wrapcommand(commands.table, 'addremove',
+    reallyaddremove)
+    wrapaddremove[1].append(('o', 'override', False, _('add/remove files '
+    'regardless of differences in case')))
