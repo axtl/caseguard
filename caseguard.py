@@ -60,7 +60,7 @@ def casecollide(ui, repo, *pats, **opts):
     for f in repo.walk(m):
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
-            fpat = re.compile(f, re.IGNORECASE)
+            fpat = re.compile(f+'\Z', re.IGNORECASE)
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit):
                     if not fpat.search(pending):
