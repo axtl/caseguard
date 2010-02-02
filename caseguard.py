@@ -1,6 +1,3 @@
-# Copyright (C) 2010 - Alexandru Totolici.  All rights reserved.
-# http://hackd.net/wares/caseguard/
-#
 # This is a small extension for Mercurial (http://www.selenic.com/mercurial)
 # that prevents certain mercurial commands from executing, by enforcing all
 # operations to be case-sensitive, regardless of the filesystem. For more
@@ -36,6 +33,9 @@
 # to their normal behaviour. However, if you pass --verbose you will get a
 # listing of the files that would cause problems.
 #
+# Copyright (C) 2010 - Alexandru Totolici
+# http://hackd.net/projects/caseguard/
+#
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2 or any later version.
 
@@ -52,7 +52,7 @@ def casecollide(ui, repo, *pats, **opts):
     '''check the case of the given file against the repository. Return True
     on collisions and (optionally) print a list of problem-files.'''
     colliding = False
-    ctx = repo.changectx('tip')
+    ctx = repo['.']
     ctxmanits = [item[0] for item in ctx.manifest().items()]
     pending = ' '.join(repo.status()[2])
     m = cmdutil.match(repo, pats, opts)
@@ -62,8 +62,7 @@ def casecollide(ui, repo, *pats, **opts):
         if exact or f not in repo.dirstate:
             fpat = re.compile(f+'\Z', re.IGNORECASE)
             for ctxmanit in ctxmanits:
-                if fpat.match(ctxmanit):
-                    if not fpat.search(pending):
+                if fpat.match(ctxmanit) and not fpat.search(pending):
                         colliding = True
                         ui.note(_('adding %s may cause a case-collision with'
                                      ' %s (already in repository)\n' % (f,
@@ -76,18 +75,18 @@ def casematch(ui, repo, *pats, **opts):
     '''check if files requested for removal match in case with those on
     disk'''
     matching = True
-    ctx = repo.changectx('tip')
+    ctx = repo['.']
     ctxmanits = [item[0] for item in ctx.manifest().items()]
     m = cmdutil.match(repo, pats, opts)
     dirfiles = ' '.join(m.files())
 
     for ctxmanit in ctxmanits:
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
-        if(regexmatch):
-            if not re.search(ctxmanit, regexmatch.group(0)):
+        if(regexmatch) and not re.search(ctxmanit, regexmatch.group(0)):
                 matching = False
-                ui.note(_('%s not removed, file in repository (%s) has '
-                     'different case\n' % (regexmatch.group(0), ctxmanit)))
+                ui.note(_('removing %s may cause data-loss: the file in the'
+                ' repository (%s) has different case\n' %
+                (regexmatch.group(0), ctxmanit)))
 
     return matching
 
