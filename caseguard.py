@@ -63,10 +63,9 @@ def casecollide(ui, repo, *pats, **opts):
             fpat = re.compile(f+'\Z', re.IGNORECASE)
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit) and not fpat.search(pending):
-                        colliding = True
-                        ui.note(_('adding %s may cause a case-collision with'
-                                     ' %s (already in repository)\n' % (f,
-                                     ctxmanit)))
+                    colliding = True
+                    ui.note(_('adding %s may cause a case-collision with %s'
+                    ' (already in repository)\n' % (f, ctxmanit)))
 
     return colliding
 
@@ -83,10 +82,10 @@ def casematch(ui, repo, *pats, **opts):
     for ctxmanit in ctxmanits:
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
         if(regexmatch) and not re.search(ctxmanit, regexmatch.group(0)):
-                matching = False
-                ui.note(_('removing %s may cause data-loss: the file in the'
-                ' repository (%s) has different case\n' %
-                (regexmatch.group(0), ctxmanit)))
+            matching = False
+            ui.note(_('removing %s may cause data-loss: the file in the'
+            ' repository (%s) has different case\n' % (regexmatch.group(0),
+            ctxmanit)))
 
     return matching
 
