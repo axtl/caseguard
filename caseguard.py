@@ -53,8 +53,9 @@ def casecollide(ui, repo, *pats, **opts):
     on collisions and (optionally) print a list of problem-files.'''
     colliding = False
     ctx = repo['.']
-    ctxmanits = [item[0] for item in ctx.manifest().items()]
-    pending = ' '.join(repo.status()[2])
+    modified, added, removed, deleted, unknown, ignored, clean = repo.status()
+    ctxmanits = [item[0] for item in ctx.manifest().items()] + added
+    pending = ' '.join(removed)
     m = cmdutil.match(repo, pats, opts)
 
     for f in repo.walk(m):

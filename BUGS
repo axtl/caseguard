@@ -1,3 +1,7 @@
-Last updated: February 1st, 2010
+Last updated: February 2nd, 2010
 
-Upon changing the case of a file through a rename we'd expect `addremove' to mark the previous version as removed and the new one as tracked, but that is currently not the case.
+• Upon changing the case of a file through a rename we'd expect `addremove' to
+mark the previous version as removed and the new one as tracked, but that is
+currently not the case.
+
+• 'hg add foo FOO' works, though it shouldn't. A fix is in the works.
