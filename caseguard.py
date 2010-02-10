@@ -39,19 +39,24 @@
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2 or any later version.
 
-'''guard against case-folding collisions'''
+'''guard against case-fold collisions'''
 
 import re
 from mercurial.i18n import _
 from mercurial import commands, extensions, cmdutil
 
-warning = _('abort: case-collision danger\n')
+warning = _('abort: case-fold collision danger\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
     '''check the case of the given file against the repository. Return True
     on collisions and (optionally) print a list of problem-files.'''
     colliding = False
+    normpats = set(map(str.lower, pats))
+    if len(normpats) != len(pats):
+        colliding = True
+        ui.note('file list contains a possible case-fold collision\n')
+        return colliding
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
     ctxmanits = [item[0] for item in ctx.manifest().items()] + added
@@ -66,7 +71,7 @@ def casecollide(ui, repo, *pats, **opts):
                 if fpat.match(ctxmanit) and not fpat.search(pending):
                     colliding = True
                     ui.note(_('adding %s may cause a case-collision with %s'
-                    ' (already in repository)\n' % (f, ctxmanit)))
+                    ' (already managed)\n' % (f, ctxmanit)))
 
     return colliding
 
