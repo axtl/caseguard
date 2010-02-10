@@ -52,11 +52,11 @@ def casecollide(ui, repo, *pats, **opts):
     '''check the case of the given file against the repository. Return True
     on collisions and (optionally) print a list of problem-files.'''
     colliding = False
-    normpats = set(map(str.lower, pats))
-    if len(normpats) != len(pats):
-        colliding = True
-        ui.note('file list contains a possible case-fold collision\n')
-        return colliding
+    # normpats = set(map(str.lower, pats))
+    #     if len(normpats) != len(pats):
+    #         colliding = True
+    #         ui.note('file list contains a possible case-fold collision\n')
+    #         return colliding
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
     ctxmanits = [item[0] for item in ctx.manifest().items()] + added
@@ -72,6 +72,9 @@ def casecollide(ui, repo, *pats, **opts):
                     colliding = True
                     ui.note(_('adding %s may cause a case-collision with %s'
                     ' (already managed)\n' % (f, ctxmanit)))
+                else:
+                    pending = pending + ' ' + f
+                    print pending
 
     return colliding
 
