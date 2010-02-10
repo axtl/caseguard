@@ -72,9 +72,9 @@ def casecollide(ui, repo, *pats, **opts):
                     colliding = True
                     ui.note(_('adding %s may cause a case-collision with %s'
                     ' (already managed)\n' % (f, ctxmanit)))
-                else:
-                    pending = pending + ' ' + f
-                    print pending
+        else:
+            pending = pending + ' ' + f
+            print pending
 
     return colliding
 
