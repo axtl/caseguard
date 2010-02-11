@@ -39,7 +39,7 @@
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2 or any later version.
 
-'''guard against case-folding collisions'''
+'''guard against case-fold collisions'''
 
 import re
 from mercurial.i18n import _
@@ -89,10 +89,9 @@ def casecollide(ui, repo, *pats, **opts):
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit) or fpat.search(pending) and not \
                     fpat.search(removing):
-                    colliding = True
                     override and True or reason.add(casewarn)
-                    ui.note(_('adding %s may cause a case-collision with'
-                        ' %s (already in repository)\n' % (f, ctxmanit)))
+                    ui.note(_('adding %s may cause a case-fold collision with'
+                        ' %s (already managed)\n' % (f, ctxmanit)))
             else:
                 pending += f + ' '
 
