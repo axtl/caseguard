@@ -74,7 +74,8 @@ def casecollide(ui, repo, *pats, **opts):
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
     ctxmanits = [item[0] for item in ctx.manifest().items()] + added
-    pending = ' '.join(removed)
+    removing = ' '.join(removed)
+    pending = ''
     m = cmdutil.match(repo, pats, opts)
 
     for f in repo.walk(m):
@@ -86,13 +87,14 @@ def casecollide(ui, repo, *pats, **opts):
         if exact or f not in repo.dirstate:
             fpat = re.compile(f+'\Z', re.IGNORECASE)
             for ctxmanit in ctxmanits:
-                if fpat.match(ctxmanit) and not fpat.search(pending):
+                if fpat.match(ctxmanit) or fpat.search(pending) and not \
+                    fpat.search(removing):
                     colliding = True
                     override and True or reason.add(casewarn)
                     ui.note(_('adding %s may cause a case-collision with'
                         ' %s (already in repository)\n' % (f, ctxmanit)))
             else:
-                pending += ' ' + f
+                pending += f + ' '
 
     colliding = (reserved and winchk) or (colliding and not override)
 
