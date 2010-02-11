@@ -91,6 +91,8 @@ def casecollide(ui, repo, *pats, **opts):
                     override and True or reason.add(casewarn)
                     ui.note(_('adding %s may cause a case-collision with'
                         ' %s (already in repository)\n' % (f, ctxmanit)))
+            else:
+                pending += ' ' + f
 
     colliding = (reserved and winchk) or (colliding and not override)
 
@@ -112,8 +114,8 @@ def casematch(ui, repo, *pats, **opts):
     for ctxmanit in ctxmanits:
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
         if(regexmatch) and not re.search(ctxmanit, regexmatch.group(0)):
-            matching = False and override
-            reason.add(casewarn)
+            matching = False
+            override and True or reason.add(casewarn)
             ui.note(_('removing %s may cause data-loss: the file in the'
                 ' repository (%s) has different case\n' %
                 (regexmatch.group(0),
