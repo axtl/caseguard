@@ -54,18 +54,25 @@ def casecollide(ui, repo, *pats, **opts):
     on collisions and (optionally) print a list of problem-files.'''
     colliding = False
     reason = None
-    ctx = repo['.']
-    modified, added, removed, deleted, unknown, ignored, clean = repo.status()
-    ctxmanits = [item[0] for item in ctx.manifest().items()] + added
-    pending = ' '.join(removed)
-    m = cmdutil.match(repo, pats, opts)
-
+    
     override = opts['override'] or ui.configbool('caseguard', 'override')
     winchk = not (opts['nowincheck'] or ui.configbool('caseguard',
         'nowincheck'))
     winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|'
         '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
         re.IGNORECASE)
+
+    normpats = set(map(str.lower, pats))
+    if len(normpats) != len(pats):
+        colliding = True and override
+        ui.note('file list contains a possible case-fold collision\n')
+        reason = casewarn
+
+    ctx = repo['.']
+    modified, added, removed, deleted, unknown, ignored, clean = repo.status()
+    ctxmanits = [item[0] for item in ctx.manifest().items()] + added
+    pending = ' '.join(removed)
+    m = cmdutil.match(repo, pats, opts)
 
     for f in repo.walk(m):
         if winbanpat.match(f):
