@@ -114,7 +114,7 @@ def casematch(ui, repo, *pats, **opts):
 
     for ctxmanit in ctxmanits:
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
-        if(regexmatch) and not re.search(ctxmanit, regexmatch.group(0)):
+        if regexmatch and not re.search(ctxmanit, regexmatch.group(0)):
             matching = False
             override and True or reasons.add(casewarn)
             ui.note(_('removing %s may cause data-loss: the file in the'
