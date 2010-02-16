@@ -54,7 +54,7 @@ def casecollide(ui, repo, *pats, **opts):
     on collisions and (optionally) print a list of problem-files.'''
     reserved = False
     colliding = False
-    reason = set()
+    reasons = set()
 
     override = opts['override'] or ui.configbool('caseguard', 'override')
     winchk = not (opts['nowincheck'] or ui.configbool('caseguard',
@@ -67,9 +67,9 @@ def casecollide(ui, repo, *pats, **opts):
     if len(normpats) != len(pats):
         colliding = True
         ui.note('file list contains a possible case-fold collision\n')
-        override and True or reason.add(casewarn)
+        override and True or reasons.add(casewarn)
         if not override:
-            return colliding, reason
+            return colliding, reasons
 
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
@@ -81,7 +81,7 @@ def casecollide(ui, repo, *pats, **opts):
     for f in repo.walk(m):
         if winbanpat.match(f):
             reserved = True
-            winchk and reason.add(namewarn) or False
+            winchk and reasons.add(namewarn) or False
             ui.note(_('%s is a reserved name on Windows\n' % f))
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
@@ -89,7 +89,7 @@ def casecollide(ui, repo, *pats, **opts):
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit) or fpat.search(pending) and not \
                     fpat.search(removing):
-                    override and True or reason.add(casewarn)
+                    override and True or reasons.add(casewarn)
                     ui.note(_('adding %s may cause a case-fold collision with'
                         ' %s (already managed)\n' % (f, ctxmanit)))
             else:
@@ -97,14 +97,14 @@ def casecollide(ui, repo, *pats, **opts):
 
     colliding = (reserved and winchk) or (colliding and not override)
 
-    return colliding, reason
+    return colliding, reasons
 
 
 def casematch(ui, repo, *pats, **opts):
     '''check if files requested for removal match in case with those on
     disk'''
     matching = True
-    reason = set()
+    reasons = set()
     ctx = repo['.']
     ctxmanits = [item[0] for item in ctx.manifest().items()]
     m = cmdutil.match(repo, pats, opts)
@@ -116,13 +116,13 @@ def casematch(ui, repo, *pats, **opts):
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
         if(regexmatch) and not re.search(ctxmanit, regexmatch.group(0)):
             matching = False
-            override and True or reason.add(casewarn)
+            override and True or reasons.add(casewarn)
             ui.note(_('removing %s may cause data-loss: the file in the'
                 ' repository (%s) has different case\n' %
                 (regexmatch.group(0),
             ctxmanit)))
 
-    return matching, reason
+    return matching, reasons
 
 
 def uisetup(ui):
@@ -131,9 +131,9 @@ def uisetup(ui):
         '''wrap the add command so it enforces that filenames differ in
         more than just case
         '''
-        collision, reason = casecollide(ui, repo, *pats, **opts)
+        collision, reasons = casecollide(ui, repo, *pats, **opts)
         if collision:
-            map(ui.warn, reason)
+            map(ui.warn, reasons)
         else:
             return orig(ui, repo, *pats, **opts)
 
@@ -142,9 +142,9 @@ def uisetup(ui):
         exactly (in case) the ones tracked by the repository
         '''
 
-        match, reason = casematch(ui, repo, *pats, **opts)
+        match, reasons = casematch(ui, repo, *pats, **opts)
         if not match:
-            map(ui.warn, reason)
+            map(ui.warn, reasons)
         else:
             return orig(ui, repo, *pats, **opts)
 
