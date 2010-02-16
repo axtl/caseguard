@@ -63,7 +63,7 @@ def casecollide(ui, repo, *pats, **opts):
         '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
         re.IGNORECASE)
 
-    normpats = set(map(str.lower, pats))
+    normpats = set(s.lower() for s in pats)
     if len(normpats) != len(pats):
         colliding = True
         ui.note('file list contains a possible case-fold collision\n')
@@ -133,7 +133,8 @@ def uisetup(ui):
         '''
         collision, reasons = casecollide(ui, repo, *pats, **opts)
         if collision:
-            map(ui.warn, reasons)
+            for reason in reasons:
+                ui.warn(reason)
         else:
             return orig(ui, repo, *pats, **opts)
 
@@ -144,7 +145,8 @@ def uisetup(ui):
 
         match, reasons = casematch(ui, repo, *pats, **opts)
         if not match:
-            map(ui.warn, reasons)
+            for reason in reasons:
+                ui.warn(reason)
         else:
             return orig(ui, repo, *pats, **opts)
 
