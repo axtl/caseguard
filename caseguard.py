@@ -83,7 +83,7 @@ def casecollide(ui, repo, *pats, **opts):
             reserved = True
             if winchk:
                 reasons.add(namewarn)
-            ui.note(_('%s is a reserved name on Windows\n' % f))
+            ui.note(_('%s is a reserved name on Windows\n') % f)
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
             fpat = re.compile(f+'\Z', re.IGNORECASE)
@@ -92,7 +92,7 @@ def casecollide(ui, repo, *pats, **opts):
                     fpat.search(removing):
                     override and True or reasons.add(casewarn)
                     ui.note(_('adding %s may cause a case-fold collision with'
-                        ' %s (already managed)\n' % (f, ctxmanit)))
+                        ' %s (already managed)\n') % (f, ctxmanit))
             else:
                 pending += f + ' '
 
@@ -120,9 +120,8 @@ def casematch(ui, repo, *pats, **opts):
             if not override:
                 reasons.add(casewarn)
             ui.note(_('removing %s may cause data-loss: the file in the'
-                ' repository (%s) has different case\n' %
-                (regexmatch.group(0),
-            ctxmanit)))
+                ' repository (%s) has different case\n') %
+                (regexmatch.group(0), ctxmanit))
 
     return matching, reasons
 
