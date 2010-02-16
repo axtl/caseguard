@@ -67,8 +67,8 @@ def casecollide(ui, repo, *pats, **opts):
     if len(normpats) != len(pats):
         colliding = True
         ui.note('file list contains a possible case-fold collision\n')
-        override and True or reasons.add(casewarn)
         if not override:
+            reasons.add(casewarn)
             return colliding, reasons
 
     ctx = repo['.']
@@ -81,7 +81,8 @@ def casecollide(ui, repo, *pats, **opts):
     for f in repo.walk(m):
         if winbanpat.match(f):
             reserved = True
-            winchk and reasons.add(namewarn) or False
+            if winchk:
+                reasons.add(namewarn)
             ui.note(_('%s is a reserved name on Windows\n' % f))
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
@@ -116,7 +117,8 @@ def casematch(ui, repo, *pats, **opts):
         regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
         if regexmatch and not re.search(ctxmanit, regexmatch.group(0)):
             matching = False
-            override and True or reasons.add(casewarn)
+            if not override:
+                reasons.add(casewarn)
             ui.note(_('removing %s may cause data-loss: the file in the'
                 ' repository (%s) has different case\n' %
                 (regexmatch.group(0),
