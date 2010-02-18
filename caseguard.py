@@ -42,8 +42,8 @@
 '''guard against case-fold collisions'''
 
 import re
-from mercurial.i18n import _
 from mercurial import commands, extensions, cmdutil
+from mercurial.i18n import _
 
 casewarn = _('abort: case-collision danger\n')
 namewarn = _('abort: Windows-reserved filenames detected\n')
@@ -90,40 +90,16 @@ def casecollide(ui, repo, *pats, **opts):
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit) or fpat.search(pending) and not \
                     fpat.search(removing):
-                    override and True or reasons.add(casewarn)
+                    if not override:
+                        reasons.add(casewarn)
                     ui.note(_('adding %s may cause a case-fold collision with'
-                        ' %s (already managed)\n') % (f, ctxmanit))
+                        ' %s (already managed)\n' % (f, ctxmanit)))
             else:
                 pending += f + ' '
 
     colliding = (reserved and winchk) or (colliding and not override)
 
     return colliding, reasons
-
-
-def casematch(ui, repo, *pats, **opts):
-    '''check if files requested for removal match in case with those on
-    disk'''
-    matching = True
-    reasons = set()
-    ctx = repo['.']
-    ctxmanits = [item[0] for item in ctx.manifest().items()]
-    m = cmdutil.match(repo, pats, opts)
-    dirfiles = ' '.join(m.files())
-
-    override = opts['override'] or ui.configbool('caseguard', 'override')
-
-    for ctxmanit in ctxmanits:
-        regexmatch = re.search(ctxmanit, dirfiles, re.IGNORECASE)
-        if regexmatch and not re.search(ctxmanit, regexmatch.group(0)):
-            matching = False
-            if not override:
-                reasons.add(casewarn)
-            ui.note(_('removing %s may cause data-loss: the file in the'
-                ' repository (%s) has different case\n') %
-                (regexmatch.group(0), ctxmanit))
-
-    return matching, reasons
 
 
 def uisetup(ui):
@@ -139,27 +115,11 @@ def uisetup(ui):
         else:
             return orig(ui, repo, *pats, **opts)
 
-    def reallyrm(orig, ui, repo, *pats, **opts):
-        '''wrap the rm command so it enforces that files to be removed match
-        exactly (in case) the ones tracked by the repository
-        '''
-
-        match, reasons = casematch(ui, repo, *pats, **opts)
-        if not match:
-            for reason in reasons:
-                ui.warn(reason)
-        else:
-            return orig(ui, repo, *pats, **opts)
-
     wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
     wrapadd[1].append(('o', 'override', False, _('add files regardless of'
         ' possible case-collision problems')))
     wrapadd[1].append(('w', 'nowincheck', False, _('do not check filenames'
         ' for Windows-reserved names')))
-
-    wraprm = extensions.wrapcommand(commands.table, 'rm', reallyrm)
-    wraprm[1].append(('o', 'override', False, _('remove files regardless of'
-        ' differences in case')))
 
     wrapaddremove = extensions.wrapcommand(commands.table, 'addremove',
     reallyadd)
