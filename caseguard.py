@@ -90,6 +90,7 @@ def casecollide(ui, repo, *pats, **opts):
             for ctxmanit in ctxmanits:
                 if fpat.match(ctxmanit) or fpat.search(pending) and not \
                     fpat.search(removing):
+                    colliding = True
                     if not override:
                         reasons.add(casewarn)
                     ui.note(_('adding %s may cause a case-fold collision with'
@@ -115,15 +116,11 @@ def uisetup(ui):
         else:
             return orig(ui, repo, *pats, **opts)
 
-    wrapadd = extensions.wrapcommand(commands.table, 'add', reallyadd)
-    wrapadd[1].append(('o', 'override', False, _('add files regardless of'
-        ' possible case-collision problems')))
-    wrapadd[1].append(('w', 'nowincheck', False, _('do not check filenames'
-        ' for Windows-reserved names')))
+    wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
+    extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
 
-    wrapaddremove = extensions.wrapcommand(commands.table, 'addremove',
-    reallyadd)
-    wrapaddremove[1].append(('o', 'override', False, _('add/remove files'
-        ' regardless of differences in case')))
-    wrapaddremove[1].append(('w', 'nowincheck', False, _('do not check'
+    for wrapcmd in wraplist:
+        wrapcmd[1].append(('o', 'override', False, _('add files regardless of'
+        ' possible case-collision problems')))
+        wrapcmd[1].append(('w', 'nowincheck', False, _('do not check'
         ' filenames for Windows-reserved names')))
