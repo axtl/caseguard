@@ -45,8 +45,8 @@ import re
 from mercurial import commands, extensions, cmdutil
 from mercurial.i18n import _
 
-casewarn = _('abort: case-collision danger\n')
-namewarn = _('abort: Windows-reserved filenames detected\n')
+casewarn = _('case-collision danger\n')
+namewarn = _('Windows-reserved filenames detected\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
@@ -54,7 +54,7 @@ def casecollide(ui, repo, *pats, **opts):
     on collisions and (optionally) print a list of problem-files.'''
     reserved = False
     colliding = False
-    reasons = set()
+    casefold = False
 
     override = opts['override'] or ui.configbool('caseguard', 'override')
     winchk = not (opts['nowincheck'] or ui.configbool('caseguard',
@@ -68,8 +68,7 @@ def casecollide(ui, repo, *pats, **opts):
         colliding = True
         ui.note('file list contains a possible case-fold collision\n')
         if not override:
-            reasons.add(casewarn)
-            return colliding, reasons
+            return colliding
 
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
@@ -81,8 +80,6 @@ def casecollide(ui, repo, *pats, **opts):
     for f in repo.walk(m):
         if winbanpat.match(f):
             reserved = True
-            if winchk:
-                reasons.add(namewarn)
             ui.note(_('%s is a reserved name on Windows\n') % f)
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
@@ -91,16 +88,14 @@ def casecollide(ui, repo, *pats, **opts):
                 if fpat.match(ctxmanit) or fpat.search(pending) and not \
                     fpat.search(removing):
                     colliding = True
-                    if not override:
-                        reasons.add(casewarn)
                     ui.note(_('adding %s may cause a case-fold collision with'
                         ' %s (already managed)\n' % (f, ctxmanit)))
             else:
                 pending += f + ' '
 
-    colliding = (reserved and winchk) or (colliding and not override)
+    casefold = (reserved and winchk) or (colliding and not override)
 
-    return colliding, reasons
+    return casefold, colliding, reserved
 
 
 def uisetup(ui):
@@ -109,10 +104,16 @@ def uisetup(ui):
         '''wrap the add command so it enforces that filenames differ in
         more than just case
         '''
-        collision, reasons = casecollide(ui, repo, *pats, **opts)
-        if collision:
-            for reason in reasons:
-                ui.warn(reason)
+        casefold, collision, reserved = casecollide(ui, repo, *pats, **opts)
+        if casefold:
+            if reserved and collision:
+                ui.warn(_("abort:\n"))
+                ui.warn("   " + namewarn)
+                ui.warn("   " + casewarn)
+            elif reserved:
+                ui.warn(_("abort: ") + namewarn)
+            elif collision:
+                ui.warn(_("abort: ") + casewarn)
         else:
             return orig(ui, repo, *pats, **opts)
 
