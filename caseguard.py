@@ -1,17 +1,15 @@
-# This is a small extension for Mercurial (http://www.selenic.com/mercurial)
-# that prevents certain mercurial commands from executing, by enforcing all
-# operations to be case-sensitive, regardless of the filesystem. For more
-# information on case-folding collisions, please refer to
+# This Mercurial extension prevents users from adding both FOO and foo to a
+# repository, or Windows-reserved filenames. Certain filesystems cannot handle 
+# cases where files differ only by case (i.e. foo and FOO) and Mercurial would 
+# report a case-folding collision if a user tried to update to a revision 
+# containing such a state. For more information, see:
 # http://mercurial.selenic.com/wiki/CaseFolding
-#
+# 
 # The operations that caseguard currently handles are:
 #
 #   - add:
 #               files to be added must be different than any tracked files in
 #               more than just case
-#   - rm:
-#               files to be removed must match exactly to those that are
-#               tracked
 #   - addremove:
 #               currently, same behaviour as add
 #
@@ -28,6 +26,7 @@
 #
 #   [caseguard]
 #   override = true
+#   nowincheck = true
 #
 # Please note that having override always enabled will revert all commands
 # to their normal behaviour. However, if you pass --verbose you will get a
