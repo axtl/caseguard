@@ -113,6 +113,7 @@ def uisetup(ui):
                 ui.warn(_("abort: ") + namewarn)
             elif collision:
                 ui.warn(_("abort: ") + casewarn)
+        return 255
         else:
             return orig(ui, repo, *pats, **opts)
 
