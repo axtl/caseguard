@@ -87,7 +87,7 @@ def casecollide(ui, repo, *pats, **opts):
                 ui.note(_('adding %s may cause a case-fold collision with'
                     ' pending additions\n') % f)
             for ctxmanit in ctxmanits:
-                if fpat.match(ctxmanit):
+                if fpat.match(ctxmanit) and (f != ctxmanit):
                     colliding = True
                     ui.note(_('adding %s may cause a case-fold collision'
                         ' with %s (already managed)\n') % (f, ctxmanit))
