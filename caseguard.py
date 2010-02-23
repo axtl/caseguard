@@ -93,7 +93,7 @@ def casecollide(ui, repo, *pats, **opts):
 
             pending += f + ' '
 
-    casefold = (reserved and not winchk) or (colliding and not override)
+    casefold = (reserved and not nowinchk) or (colliding and not override)
 
     return casefold, colliding, reserved
 
