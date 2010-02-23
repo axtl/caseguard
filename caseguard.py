@@ -57,8 +57,7 @@ def casecollide(ui, repo, *pats, **opts):
     casefold = False
 
     override = opts['override'] or ui.configbool('caseguard', 'override')
-    winchk = not (opts['nowincheck'] or ui.configbool('caseguard',
-        'nowincheck'))
+    nowinchk = opts['nowincheck'] or ui.configbool('caseguard', 'nowincheck')
     winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|'
         '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
         re.IGNORECASE)
@@ -94,7 +93,7 @@ def casecollide(ui, repo, *pats, **opts):
 
             pending += f + ' '
 
-    casefold = (reserved and winchk) or (colliding and not override)
+    casefold = (reserved and not winchk) or (colliding and not override)
 
     return casefold, colliding, reserved
 
