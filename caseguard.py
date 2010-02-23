@@ -80,7 +80,7 @@ def casecollide(ui, repo, *pats, **opts):
             ui.note(_('%s is a reserved name on Windows\n') % f)
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
-            fpat = re.compile(f+'(\Z|\b)', re.IGNORECASE)
+            fpat = re.compile(f+'( |\Z|\b)', re.IGNORECASE)
             if fpat.search(pending) and not fpat.search(removing):
                 colliding = True
                 ui.note(_('adding %s may cause a case-fold collision with'
@@ -95,7 +95,7 @@ def casecollide(ui, repo, *pats, **opts):
 
     casefold = (reserved and not nowinchk) or (colliding and not override)
 
-    return casefold, colliding, reserved
+    return casefold, colliding and not override, reserved and not nowinchk
 
 
 def uisetup(ui):
