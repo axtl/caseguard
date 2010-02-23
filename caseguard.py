@@ -93,9 +93,9 @@ def casecollide(ui, repo, *pats, **opts):
 
             pending += f + ' '
 
-    casefold = (reserved and not nowinchk) or (colliding and not override)
+    casefold = not override and ((reserved and not nowinchk) or colliding)
 
-    return casefold, colliding and not override, reserved and not nowinchk
+    return casefold, colliding, reserved and not nowinchk
 
 
 def uisetup(ui):
