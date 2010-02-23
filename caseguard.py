@@ -81,7 +81,7 @@ def casecollide(ui, repo, *pats, **opts):
             ui.note(_('%s is a reserved name on Windows\n') % f)
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
-            fpat = re.compile(f, re.IGNORECASE)
+            fpat = re.compile(f+'(\Z|\b)', re.IGNORECASE)
             if fpat.search(pending) and not fpat.search(removing):
                 colliding = True
                 ui.note(_('adding %s may cause a case-fold collision with'
