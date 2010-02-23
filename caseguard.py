@@ -1,10 +1,10 @@
 # This Mercurial extension prevents users from adding both FOO and foo to a
-# repository, or Windows-reserved filenames. Certain filesystems cannot handle 
-# cases where files differ only by case (i.e. foo and FOO) and Mercurial would 
-# report a case-folding collision if a user tried to update to a revision 
+# repository, or Windows-reserved filenames. Certain filesystems cannot handle
+# cases where files differ only by case (i.e. foo and FOO) and Mercurial would
+# report a case-folding collision if a user tried to update to a revision
 # containing such a state. For more information, see:
 # http://mercurial.selenic.com/wiki/CaseFolding
-# 
+#
 # The operations that caseguard currently handles are:
 #
 #   - add:
@@ -44,6 +44,7 @@ import re
 from mercurial import commands, extensions, cmdutil
 from mercurial.i18n import _
 
+
 casewarn = _('case-collision danger\n')
 namewarn = _('Windows-reserved filenames detected\n')
 
@@ -66,8 +67,6 @@ def casecollide(ui, repo, *pats, **opts):
     if len(normpats) != len(pats):
         colliding = True
         ui.note('file list contains a possible case-fold collision\n')
-        if not override:
-            return colliding
 
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
@@ -82,15 +81,18 @@ def casecollide(ui, repo, *pats, **opts):
             ui.note(_('%s is a reserved name on Windows\n') % f)
         exact = m.exact(f)
         if exact or f not in repo.dirstate:
-            fpat = re.compile(f+'\Z', re.IGNORECASE)
+            fpat = re.compile(f, re.IGNORECASE)
+            if fpat.search(pending) and not fpat.search(removing):
+                colliding = True
+                ui.note(_('adding %s may cause a case-fold collision with'
+                    ' pending additions\n') % f)
             for ctxmanit in ctxmanits:
-                if fpat.match(ctxmanit) or fpat.search(pending) and not \
-                    fpat.search(removing):
+                if fpat.match(ctxmanit):
                     colliding = True
-                    ui.note(_('adding %s may cause a case-fold collision with'
-                        ' %s (already managed)\n' % (f, ctxmanit)))
-            else:
-                pending += f + ' '
+                    ui.note(_('adding %s may cause a case-fold collision'
+                        ' with %s (already managed)\n') % (f, ctxmanit))
+
+            pending += f + ' '
 
     casefold = (reserved and winchk) or (colliding and not override)
 
@@ -113,12 +115,12 @@ def uisetup(ui):
                 ui.warn(_("abort: ") + namewarn)
             elif collision:
                 ui.warn(_("abort: ") + casewarn)
-        return 255
+            return 255
         else:
             return orig(ui, repo, *pats, **opts)
 
     wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
-    extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
+        extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
 
     for wrapcmd in wraplist:
         wrapcmd[1].append(('o', 'override', False, _('add files regardless of'
