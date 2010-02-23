@@ -66,7 +66,7 @@ def casecollide(ui, repo, *pats, **opts):
     normpats = set(s.lower() for s in pats)
     if len(normpats) != len(pats):
         colliding = True
-        ui.note('file list contains a possible case-fold collision\n')
+        ui.note(_('file list contains a possible case-fold collision\n'))
 
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
@@ -87,7 +87,7 @@ def casecollide(ui, repo, *pats, **opts):
                 ui.note(_('adding %s may cause a case-fold collision with'
                     ' pending additions\n') % f)
             for ctxmanit in ctxmanits:
-                if fpat.match(ctxmanit) and (f != ctxmanit):
+                if fpat.match(ctxmanit) and f != ctxmanit:
                     colliding = True
                     ui.note(_('adding %s may cause a case-fold collision'
                         ' with %s (already managed)\n') % (f, ctxmanit))
