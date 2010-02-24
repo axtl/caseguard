@@ -1,0 +1,6 @@
+% case-sensitive filesystem test
+abort: case-collision danger
+? FOO
+? Foo
+? fOO
+? foo

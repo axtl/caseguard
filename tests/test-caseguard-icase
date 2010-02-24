@@ -1,0 +1,45 @@
+#!/bin/sh
+
+"$TESTDIR/hghave" caseguard || exit 80
+
+echo '% case-insensitive filesystem test'
+hg init repo1
+cat << EOF >> $HGRCPATH
+[extensions]
+caseguard = 
+EOF
+cd repo1
+
+# simple case collision
+echo foo > foo
+hg add foo
+hg st
+mv foo FOO
+hg add FOO && echo '% collision with pending addition'
+mv FOO foo
+hg ci -m addfoo
+mv foo FOO
+hg add FOO && echo '% collision with tracked file'
+mv FOO foo
+echo FO > FO
+hg add FO || echo '% false positive, partial filename match'
+
+# argument collision
+echo bar > bar
+echo BART > BART
+hg add bar BART || echo '% false positive, partial argument name match'
+mv BART BAR
+hg add bar BAR && echo '% collision in list of arguments'
+
+# windows reserved filenames
+echo com1 > com1
+hg add com1 && echo '% windows-reserved filename'
+echo com > com
+hg add com || echo '% false positive, partial Windows reserved-name match'
+echo com1COM > com1COM
+hg add com1COM || echo "% false positive, unable to add unrestricted file"
+
+hg st
+
+cd ..
+rm -rf repo1

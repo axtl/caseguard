@@ -1,0 +1,25 @@
+diff -r 184cdb66263e tests/hghave
+--- a/tests/hghave	Tue Feb 23 23:19:09 2010 +0100
++++ b/tests/hghave	Tue Feb 23 18:15:43 2010 -0800
+@@ -43,6 +43,13 @@
+     except ImportError:
+         return False
+ 
++def has_caseguard():
++    try:
++        import hgext.caseguard
++        return True
++    except ImportError:
++        return False
++
+ def has_cvs():
+     re = r'Concurrent Versions System.*?server'
+     return matchoutput('cvs --version 2>&1', re)
+@@ -183,6 +190,7 @@
+     "baz": (has_baz, "GNU Arch baz client"),
+     "bzr": (has_bzr, "Canonical's Bazaar client"),
+     "bzr114": (has_bzr114, "Canonical's Bazaar client >= 1.14"),
++    "caseguard": (has_caseguard, "caseguard extension support"),
+     "cvs": (has_cvs, "cvs client/server"),
+     "darcs": (has_darcs, "darcs client"),
+     "eol-in-paths": (has_eol_in_paths, "end-of-lines in paths"),

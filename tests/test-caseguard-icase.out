@@ -1,0 +1,13 @@
+% case-insensitive filesystem test
+A foo
+abort: case-collision danger
+abort: case-collision danger
+abort: case-collision danger
+abort: Windows-reserved filenames detected
+A FO
+A bar
+A com
+A com1COM
+! BART
+? BAR
+? com1

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+"$TESTDIR/hghave" caseguard || exit 80
+"$TESTDIR/hghave" casefs || exit 80
+
+echo '% case-sensitive filesystem test'
+hg init repo2
+cat << EOF >> $HGRCPATH
+[extensions]
+caseguard = 
+EOF
+cd repo2
+
+# multiple files, diff case
+echo foo > foo
+echo FOO > FOO
+echo Foo > Foo
+echo fOO > fOO
+hg add && echo '% collision in initial add'
+
+cd ..
+rm -rf repo2
