@@ -100,6 +100,8 @@ def uisetup(ui):
         '''wrap the add command so it enforces that filenames differ in
         more than just case
         '''
+        if opts['unguard']:
+            return orig(ui, repo, *pats, **opts)
         casefold, collision, reserved = casecollide(ui, repo, *pats, **opts)
         if casefold:
             if reserved and collision:
@@ -122,3 +124,5 @@ def uisetup(ui):
         ' possible case-collision problems')))
         wrapcmd[1].append(('w', 'nowincheck', False, _('do not check'
         ' filenames for Windows-reserved names')))
+        wrapcmd[1].append(('U', 'unguard', False, _('completely skip checks'
+        ' related to case-collision problems')))
