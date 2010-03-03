@@ -70,7 +70,8 @@ def casecollide(ui, repo, *pats, **opts):
     ctx = repo['.']
     modified, added, removed, deleted, unknown, ignored, clean = repo.status()
     exclst = [item[0] for item in ctx.manifest().items()] + added
-    chklst = set(item.lower() for item in exclst)
+    chklst = [item.lower() for item in exclst]
+    mtch = dict(zip(chklst, exclst))
     m = cmdutil.match(repo, pats, opts)
     walker = repo.walk(m)
 
@@ -78,16 +79,12 @@ def casecollide(ui, repo, *pats, **opts):
         if winbanpat.match(f):
             reserved = True
             ui.note(_('%s is a reserved name on Windows\n') % f)
-        if f not in repo.dirstate and f.lower() in chklst and f not in exclst:
+        if f not in repo.dirstate and f.lower() in mtch and f not in exclst:
             colliding = True
-            if ui.verbose:
-                matcher = re.search(f, ' '.join(exclst), re.I)
-                if matcher:
-                    mtch = matcher.group(0)
-                    ui.note(_('adding %s may cause a case-fold collision'
-                        ' with %s (already managed)\n') % (f, mtch))
+            ui.note(_('adding %s may cause a case-fold collision with %s\n') %
+                (f, mtch[f]))
 
-        chklst.add(f.lower())
+        mtch[f.lower()] = f
 
     casefold = not override and ((reserved and not nowinchk) or colliding)
 
