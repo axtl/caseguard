@@ -82,7 +82,7 @@ def casecollide(ui, repo, *pats, **opts):
         if f not in repo.dirstate and f.lower() in mtch and f not in exclst:
             colliding = True
             ui.note(_('adding %s may cause a case-fold collision with %s\n') %
-                (f, mtch[f]))
+                (f, mtch[f.lower()]))
 
         mtch[f.lower()] = f
 
