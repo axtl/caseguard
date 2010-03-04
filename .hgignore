@@ -3,4 +3,6 @@
 .DS_Store
 \.orig
 \.output
+pylint_
+\.prof
 
