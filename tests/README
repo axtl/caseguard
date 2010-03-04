@@ -1,0 +1,9 @@
+In order to test caseguard with Mercurial, you need to:
+
+    • move caseguard.py in <hg_source>/hgext/
+    • move test files in <hg_source>/tests/
+    • patch hghave with the patch here
+    • in <hg_source>, `make test-caseguard*`
+
+Depending on the operating system you're using, you might run two or three of
+the tests (one test is dependent on having a case-sensitive filesystem)
