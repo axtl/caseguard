@@ -2,19 +2,14 @@
 # repository, or Windows-reserved filenames. Certain filesystems cannot handle
 # cases where files differ only by case (i.e. foo and FOO) and Mercurial would
 # report a case-folding collision if a user tried to update to a revision
-# containing such a state. For more information, see:
+# containing such a state. For more information, please see:
 # http://mercurial.selenic.com/wiki/CaseFolding
 #
-# The operations that caseguard currently handles are:
+# The operations that caseguard currently handles are 'add' and 'addremove'.
 #
-#   - add:
-#               files to be added must be different than any tracked files in
-#               more than just case
-#   - addremove:
-#               currently, same behaviour as add
-#
-# Please note that renaming file1 to FILE1 and running addremove will NOT
-# change what the repository tracks. This is planned for a future release.
+# Renaming file1 to FILE1 and running addremove will NOT change what the
+# repository tracks. All changes must be committed before caseguard will
+# allow files to be added (this means 'hg rm foo; hg add FOO' will fail).
 #
 # To enable the "caseguard" extension globally, put these lines in your
 # ~/.hgrc:
@@ -28,6 +23,9 @@
 #   override = true
 #   nowincheck = true
 #
+# You cannot enable -U/--unguard in the config file since this effectively
+# disables the extension.
+# 
 # Please note that having override always enabled will revert all commands
 # to their normal behaviour. However, if you pass --verbose you will get a
 # listing of the files that would cause problems.
