@@ -31,14 +31,6 @@ hg add bar BART || echo '% false positive, partial argument name match'
 mv BART BAR
 hg add bar BAR && echo '% collision in list of arguments'
 
-# windows reserved filenames
-echo com1 > com1
-hg add com1 && echo '% windows-reserved filename'
-echo com > com
-hg add com || echo '% false positive, partial Windows reserved-name match'
-echo com1COM > com1COM
-hg add com1COM || echo "% false positive, unable to add unrestricted file"
-
 hg st
 
 cd ..
