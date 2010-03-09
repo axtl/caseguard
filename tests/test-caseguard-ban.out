@@ -1,8 +1,12 @@
 % problematic filenames test
 abort: Windows-incompatible filenames detected
 abort: Windows-incompatible filenames detected
+abort: Windows-incompatible filenames detected
+abort: Windows-incompatible filenames detected
+abort: Windows-incompatible filenames detected
 A com
 A com1COM
+?  leadspace
 ? com1
 ? file\name
 ? traildot.

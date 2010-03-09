@@ -59,7 +59,7 @@ def casecollide(ui, repo, *pats, **opts):
     winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|'
         '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
         re.IGNORECASE)
-    badchars = re.compile('\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
+    badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
     if len(set(s.lower() for s in pats)) != len(pats):
         colliding = True

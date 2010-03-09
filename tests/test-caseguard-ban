@@ -18,8 +18,12 @@ hg add com || echo '% false positive, partial Windows reserved-name match'
 echo com1COM > com1COM
 hg add com1COM || echo "% false positive, unable to add unrestricted file"
 echo "file\name" > "file\name"
+hg add && echo '% windows-incompatible filenames added'
 echo "traildot." > "traildot."
+hg add && echo '% windows-incompatible filenames added'
 echo "trailspace " > "trailspace "
+hg add && echo '% windows-incompatible filenames added'
+echo " leadspace" > " leadspace"
 hg add && echo '% windows-incompatible filenames added'
 
 hg st
