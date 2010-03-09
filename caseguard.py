@@ -25,7 +25,7 @@
 #
 # You cannot enable -U/--unguard in the config file since this effectively
 # disables the extension.
-# 
+#
 # Please note that having override always enabled will revert all commands
 # to their normal behaviour. However, if you pass --verbose you will get a
 # listing of the files that would cause problems.
@@ -36,7 +36,7 @@
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2 or any later version.
 
-'''guard against case-fold collisions'''
+'''guard against case-fold collisions and Windows name incompatibilities'''
 
 import re
 from mercurial import commands, extensions, cmdutil
@@ -44,7 +44,7 @@ from mercurial.i18n import _
 
 
 casewarn = _('case-collision danger\n')
-namewarn = _('Windows-reserved filenames detected\n')
+namewarn = _('Windows-incompatible filenames detected\n')
 
 
 def casecollide(ui, repo, *pats, **opts):
@@ -59,25 +59,26 @@ def casecollide(ui, repo, *pats, **opts):
     winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|'
         '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
         re.IGNORECASE)
+    badchars = re.compile('\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
-    normpats = set(s.lower() for s in pats)
-    if len(normpats) != len(pats):
+    if len(set(s.lower() for s in pats)) != len(pats):
         colliding = True
         ui.note(_('file list contains a possible case-fold collision\n'))
 
-    ctx = repo['.']
-    added, removed = repo.status()[1:3]
-    exclst = [item[0] for item in ctx.manifest().items()] + added
+    added = repo.status()[1]
+    exclst = [item[0] for item in repo['.'].manifest().items()] + added
     chklst = [item.lower() for item in exclst]
     mtch = dict(zip(chklst, exclst))
     m = cmdutil.match(repo, pats, opts)
-    walker = repo.walk(m)
 
-    for f in walker:
+    for f in repo.walk(m):
         flwr = f.lower()
         if winbanpat.match(f):
             reserved = True
             ui.note(_('%s is a reserved name on Windows\n') % f)
+        if badchars.search(f):
+            reserved = True
+            ui.note(_('%s contains Windows-illegal characters\n') % f)
         if f not in repo.dirstate and f not in exclst and flwr in mtch:
             colliding = True
             ui.note(_('adding %s may cause a case-fold collision with %s\n') %
@@ -119,6 +120,6 @@ def uisetup(ui):
         wrapcmd[1].append(('o', 'override', False, _('add files regardless of'
         ' possible case-collision problems')))
         wrapcmd[1].append(('w', 'nowincheck', False, _('do not check'
-        ' filenames for Windows-reserved names')))
+        ' filenames for Windows incompatibilities')))
         wrapcmd[1].append(('U', 'unguard', False, _('completely skip checks'
         ' related to case-collision problems')))

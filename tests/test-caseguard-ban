@@ -1,0 +1,28 @@
+#!/bin/bash
+
+"$TESTDIR/hghave" caseguard || exit 80
+
+echo '% problematic filenames test'
+hg init repo4
+cat << EOF >> $HGRCPATH
+[extensions]
+caseguard = 
+EOF
+cd repo4
+
+# windows reserved filenames
+echo com1 > com1
+hg add com1 && echo '% windows-reserved filename'
+echo com > com
+hg add com || echo '% false positive, partial Windows reserved-name match'
+echo com1COM > com1COM
+hg add com1COM || echo "% false positive, unable to add unrestricted file"
+echo "file\name" > "file\name"
+echo "traildot." > "traildot."
+echo "trailspace " > "trailspace "
+hg add && echo '% windows-incompatible filenames added'
+
+hg st
+
+cd ..
+rm -rf repo4
