@@ -1,6 +1,7 @@
 #!/bin/bash
 
 "$TESTDIR/hghave" caseguard || exit 80
+"$TESTDIR/hghave" eol-in-paths || exit 80
 
 echo '% problematic filenames test'
 hg init repo4
