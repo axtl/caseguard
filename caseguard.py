@@ -1,15 +1,14 @@
-# This Mercurial extension prevents users from adding both FOO and foo to a
-# repository, or Windows-reserved filenames. Certain filesystems cannot handle
-# cases where files differ only by case (i.e. foo and FOO) and Mercurial would
-# report a case-folding collision if a user tried to update to a revision
-# containing such a state. For more information, please see:
+# This Mercurial extension prevents users from adding:
+# * filenames that differ only by case (i.e. 'FOO' and 'foo')
+# * Windows-reserved filenames.
+#
+# Some filesystems cannot handle situations where files differ only by case.
+# If such files are present (added from a filesystem that doesn't have this
+# limitation) Mercurial will report a case-folding collision when the user
+# tries to update. For more information, please see:
 # http://mercurial.selenic.com/wiki/CaseFolding
 #
 # The operations that caseguard currently handles are 'add' and 'addremove'.
-#
-# Renaming file1 to FILE1 and running addremove will NOT change what the
-# repository tracks. All changes must be committed before caseguard will
-# allow files to be added (this means 'hg rm foo; hg add FOO' will fail).
 #
 # To enable the "caseguard" extension globally, put these lines in your
 # ~/.hgrc:
@@ -30,6 +29,10 @@
 # to their normal behaviour. However, if you pass --verbose you will get a
 # listing of the files that would cause problems.
 #
+# NOTE: renaming file1 to FILE1 and running addremove will NOT change what the
+# repository tracks. All changes must be committed before caseguard will
+# allow files to be added (this means 'hg rm foo; hg add FOO' will fail).
+#
 # Copyright (C) 2010 - Alexandru Totolici
 # http://hackd.net/projects/caseguard/
 #
@@ -39,12 +42,12 @@
 '''guard against case-fold collisions and Windows name incompatibilities'''
 
 import re
-from mercurial import commands, extensions, cmdutil
+from mercurial import commands, extensions, cmdutil, util
 from mercurial.i18n import _
 
 
-casewarn = _('case-collision danger\n')
-namewarn = _('Windows-incompatible filenames detected\n')
+casewarn = _('case-collision danger')
+namewarn = _('Windows-incompatible filenames detected')
 
 
 def casecollide(ui, repo, *pats, **opts):
@@ -102,13 +105,11 @@ def uisetup(ui):
         casefold, collision, reserved = casecollide(ui, repo, *pats, **opts)
         if casefold:
             if reserved and collision:
-                ui.warn(_("abort:\n"))
-                ui.warn("   " + namewarn)
-                ui.warn("   " + casewarn)
+                raise util.Abort(namewarn + '\n' + casewarn)
             elif reserved:
-                ui.warn(_("abort: ") + namewarn)
+                raise util.Abort(namewarn)
             elif collision:
-                ui.warn(_("abort: ") + casewarn)
+                raise util.Abort(casewarn)
             return 255
         else:
             return orig(ui, repo, *pats, **opts)
