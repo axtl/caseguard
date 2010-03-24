@@ -49,8 +49,26 @@ from mercurial.i18n import _
 casewarn = _('case-collision danger')
 namewarn = _('Windows-incompatible filenames detected')
 
+winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|(con(\..*)?)|'
+    '(aux(\..*)?)|''(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z', re.IGNORECASE)
+badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
-def casecollide(ui, repo, *pats, **opts):
+
+def _winchecks(ui, f):
+    if winbanpat.match(f):
+        ui.note(_('%s is a reserved name on Windows\n') % f)
+        return True
+    return False
+
+
+def _charcheck(ui, f):
+    if badchars.search(f):
+        ui.note(_('%s contains Windows-illegal characters\n') % f)
+        return True
+    return False
+
+
+def _casecollide(ui, repo, *pats, **opts):
     '''check the case of the given file against the repository. Return True
     on collisions and (optionally) print a list of problem-files.'''
     reserved = False
@@ -59,10 +77,6 @@ def casecollide(ui, repo, *pats, **opts):
 
     override = opts['override'] or ui.configbool('caseguard', 'override')
     nowinchk = opts['nowincheck'] or ui.configbool('caseguard', 'nowincheck')
-    winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|'
-        '(con(\..*)?)|(aux(\..*)?)|(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z',
-        re.IGNORECASE)
-    badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
     if len(set(s.lower() for s in pats)) != len(pats):
         colliding = True
@@ -76,12 +90,7 @@ def casecollide(ui, repo, *pats, **opts):
 
     for f in repo.walk(m):
         flwr = f.lower()
-        if winbanpat.match(f):
-            reserved = True
-            ui.note(_('%s is a reserved name on Windows\n') % f)
-        if badchars.search(f):
-            reserved = True
-            ui.note(_('%s contains Windows-illegal characters\n') % f)
+        reserved = _winchecks(ui, f) or _charcheck(ui, f)
         if f not in repo.dirstate and f not in exclst and flwr in mtch:
             colliding = True
             ui.note(_('adding %s may cause a case-fold collision with %s\n') %
@@ -94,33 +103,40 @@ def casecollide(ui, repo, *pats, **opts):
     return casefold, colliding, reserved and not nowinchk
 
 
-def uisetup(ui):
+def reallyadd(orig, ui, repo, *pats, **opts):
+    '''wrap the add command so it enforces that filenames differ in
+    more than just case
+    '''
+    if opts['unguard']:
+        return orig(ui, repo, *pats, **opts)
+    casefold, collision, reserved = _casecollide(ui, repo, *pats, **opts)
+    if casefold:
+        if reserved and collision:
+            raise util.Abort('\n\t* ' + namewarn + '\n\t* ' + casewarn)
+        elif reserved:
+            raise util.Abort(namewarn)
+        elif collision:
+            raise util.Abort(casewarn)
+        return 255
+    else:
+        return orig(ui, repo, *pats, **opts)
 
-    def reallyadd(orig, ui, repo, *pats, **opts):
-        '''wrap the add command so it enforces that filenames differ in
-        more than just case
-        '''
-        if opts['unguard']:
-            return orig(ui, repo, *pats, **opts)
-        casefold, collision, reserved = casecollide(ui, repo, *pats, **opts)
-        if casefold:
-            if reserved and collision:
-                raise util.Abort(namewarn + '\n' + casewarn)
-            elif reserved:
-                raise util.Abort(namewarn)
-            elif collision:
-                raise util.Abort(casewarn)
-            return 255
-        else:
-            return orig(ui, repo, *pats, **opts)
 
-    wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
-        extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
+def casecheck(ui, repo):
+    '''check an existing repository for filename issues (caseguard)'''
+    raise NotImplementedError(_('checking an existing repository is not'
+                                ' implemented yet'))
 
-    for wrapcmd in wraplist:
-        wrapcmd[1].append(('o', 'override', False, _('add files regardless of'
-        ' possible case-collision problems')))
-        wrapcmd[1].append(('w', 'nowincheck', False, _('do not check'
-        ' filenames for Windows incompatibilities')))
-        wrapcmd[1].append(('U', 'unguard', False, _('completely skip checks'
-        ' related to case-collision problems')))
+wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
+    extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
+
+for wrapcmd in wraplist:
+    wrapcmd[1].append(('o', 'override', False, _('add files regardless of'
+    ' possible case-collision problems')))
+    wrapcmd[1].append(('w', 'nowincheck', False, _('do not check'
+    ' filenames for Windows incompatibilities')))
+    wrapcmd[1].append(('U', 'unguard', False, _('completely skip checks'
+    ' related to case-collision problems')))
+
+cmdtable = {
+    'casecheck': (casecheck, [], 'check the repository for filename issues')}
