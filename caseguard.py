@@ -54,7 +54,7 @@ winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|(con(\..*)?)|'
 badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
 
-def _winchecks(ui, f):
+def _wincheck(ui, f):
     if winbanpat.match(f):
         ui.note(_('%s is a reserved name on Windows\n') % f)
         return True
@@ -90,7 +90,7 @@ def _casecollide(ui, repo, *pats, **opts):
 
     for f in repo.walk(m):
         flwr = f.lower()
-        reserved = _winchecks(ui, f) or _charcheck(ui, f)
+        reserved = _wincheck(ui, f) or _charcheck(ui, f)
         if f not in repo.dirstate and f not in exclst and flwr in mtch:
             colliding = True
             ui.note(_('adding %s may cause a case-fold collision with %s\n') %
@@ -122,10 +122,24 @@ def reallyadd(orig, ui, repo, *pats, **opts):
         return orig(ui, repo, *pats, **opts)
 
 
-def casecheck(ui, repo):
-    '''check an existing repository for filename issues (caseguard)'''
-    raise NotImplementedError(_('checking an existing repository is not'
-                                ' implemented yet'))
+def casecheck(ui, repo, *pats, **opts):
+    if not repo.local():
+        ui.note(_('Only local repositories can be checked'))
+        return
+    '''check an existing local repository for filename issues (caseguard)'''
+    m = cmdutil.match(repo, pats, opts)
+
+    seen = dict()
+
+    for f in repo.walk(m):
+        if f in repo.dirstate:
+            badname = _wincheck(ui, f, ui.status) or _charcheck(ui, f)
+            if f.lower() in seen:
+                ui.status(_('%s collides with %s\n') % (f, seen[f.lower()]))
+            else:
+                seen[f.lower()] = f
+                if not badname:
+                    ui.note(_('[OK] %s\n') % f)
 
 wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
     extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
