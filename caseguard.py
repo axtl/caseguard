@@ -54,16 +54,20 @@ winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|(con(\..*)?)|'
 badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
 
-def _wincheck(ui, f):
+def _wincheck(ui, f, loglevel=None):
+    if loglevel == None:
+        loglevel = ui.note
     if winbanpat.match(f):
-        ui.note(_('%s is a reserved name on Windows\n') % f)
+        loglevel(_('%s is a reserved name on Windows\n') % f)
         return True
     return False
 
 
-def _charcheck(ui, f):
+def _charcheck(ui, f, loglevel=None):
+    if loglevel==None:
+        loglevel = ui.note
     if badchars.search(f):
-        ui.note(_('%s contains Windows-illegal characters\n') % f)
+        loglevel(_('%s contains Windows-illegal characters\n') % f)
         return True
     return False
 
@@ -133,13 +137,14 @@ def casecheck(ui, repo, *pats, **opts):
 
     for f in repo.walk(m):
         if f in repo.dirstate:
-            badname = _wincheck(ui, f, ui.status) or _charcheck(ui, f)
+            badname = _wincheck(ui, f, ui.status) or \
+                        _charcheck(ui, f, ui.status)
             if f.lower() in seen:
                 ui.status(_('%s collides with %s\n') % (f, seen[f.lower()]))
             else:
                 seen[f.lower()] = f
                 if not badname:
-                    ui.note(_('[OK] %s\n') % f)
+                    ui.note(_('\t[OK] %s\n') % f)
 
 wraplist = [extensions.wrapcommand(commands.table, 'add', reallyadd),
     extensions.wrapcommand(commands.table, 'addremove', reallyadd)]
