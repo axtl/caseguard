@@ -11,3 +11,16 @@ A com1COM
 ? file\name
 ? traildot.
 ? trailspace 
+% override windows restrictions
+adding  leadspace
+adding com1
+adding file\name
+adding traildot.
+adding trailspace 
+A  leadspace
+A com
+A com1
+A com1COM
+A file\name
+A traildot.
+A trailspace 

@@ -29,5 +29,12 @@ hg add && echo '% windows-incompatible filenames added'
 
 hg st
 
+# bypass windows restrictions
+echo '% override windows restrictions'
+hg add -w || echo '% unable to disable windows checks'
+
+hg st
+
+
 cd ..
 rm -rf repo4

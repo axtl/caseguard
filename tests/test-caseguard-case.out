@@ -4,3 +4,17 @@ abort: case-collision danger
 ? Foo
 ? fOO
 ? foo
+abort: case-collision danger
+% case-sensitive override test
+adding Baz
+adding FOO
+adding Foo
+adding fOO
+adding foo
+A Baz
+A FOO
+A Foo
+A fOO
+A foo
+! BAZ
+! baz

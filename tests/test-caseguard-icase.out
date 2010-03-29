@@ -2,8 +2,10 @@
 A foo
 abort: case-collision danger
 abort: case-collision danger
-abort: case-collision danger
 A FO
-A bar
-! BART
-? BAR
+% case-insensitive override test
+adding Baz
+A BAZ
+A Baz
+A FO
+A baz

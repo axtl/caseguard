@@ -1,7 +1,7 @@
 #!/bin/sh
 
 "$TESTDIR/hghave" caseguard || exit 80
-"$TESTDIR/hghave" casefs || exit 80
+"$TESTDIR/hghave" no-icasefs || exit 80
 
 echo '% case-sensitive filesystem test'
 hg init repo2
@@ -17,6 +17,20 @@ echo FOO > FOO
 echo Foo > Foo
 echo fOO > fOO
 hg add && echo '% collision in initial add'
+
+hg st
+
+hg add foo FOO && echo '% collision in argument list'
+
+echo '% case-sensitive override test'
+echo baz > baz
+hg add baz
+mv baz BAZ
+hg add -o BAZ || echo '% disable collision check failure'
+mv BAZ Baz
+hg add -o
+
+hg st
 
 cd ..
 rm -rf repo2

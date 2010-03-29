@@ -1,6 +1,7 @@
 #!/bin/sh
 
 "$TESTDIR/hghave" caseguard || exit 80
+"$TESTDIR/hghave" icasefs || exit 80
 
 echo '% case-insensitive filesystem test'
 hg init repo1
@@ -24,12 +25,15 @@ mv FOO foo
 echo FO > FO
 hg add FO || echo '% false positive, partial filename match'
 
-# argument collision
-echo bar > bar
-echo BART > BART
-hg add bar BART || echo '% false positive, partial argument name match'
-mv BART BAR
-hg add bar BAR && echo '% collision in list of arguments'
+hg st
+
+echo '% case-insensitive override test'
+echo baz > baz
+hg add baz
+mv baz BAZ
+hg add -o BAZ || echo '% disable collision check failure'
+mv BAZ Baz
+hg add -o
 
 hg st
 
