@@ -86,7 +86,7 @@ def _casecollide(ui, repo, *pats, **opts):
         colliding = True
         ui.note(_('file list contains a possible case-fold collision\n'))
 
-    added = repo.status()[1]
+    added = repo.status()[1] + repo.status()[3]
     exclst = [item[0] for item in repo['.'].manifest().items()] + added
     chklst = [item.lower() for item in exclst]
     mtch = dict(zip(chklst, exclst))
