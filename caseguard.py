@@ -50,7 +50,7 @@ casewarn = _('case-collision danger')
 namewarn = _('Windows-incompatible filenames detected')
 
 winbanpat = re.compile('((com[1-9](\..*)?)|(lpt[1-9](\..*)?)|(con(\..*)?)|'
-    '(aux(\..*)?)|''(prn(\..*)?)|(nul(\..*)?)|(CLOCK\$))\Z', re.IGNORECASE)
+    '(aux(\..*)?)|''(prn(\..*)?)|(nul(\..*)?)|(clock\$))\Z', re.IGNORECASE)
 badchars = re.compile('(^ )|\\\|\?|\%|\*|\:|\||\"|\<|\>|((\.|\ )$)')
 
 
@@ -94,7 +94,7 @@ def _casecollide(ui, repo, *pats, **opts):
 
     for f in repo.walk(m):
         flwr = f.lower()
-        reserved = _wincheck(ui, f) or _charcheck(ui, f)
+        reserved = _wincheck(ui, f) or _charcheck(ui, f) or reserved
         if f not in repo.dirstate and f not in exclst and flwr in mtch:
             colliding = True
             ui.note(_('adding %s may cause a case-fold collision with %s\n') %
